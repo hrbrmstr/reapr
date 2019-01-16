@@ -4,8 +4,11 @@
 \name{reapr}
 \alias{reapr}
 \alias{reapr-package}
-\title{...}
+\title{Reap Information from Websites}
 \description{
+This will eventually be a clever description about web scraping with reapr.
+}
+\details{
 \itemize{
 \item URL: \url{https://gitlab.com/hrbrmstr/reapr}
 \item BugReports: \url{https://gitlab.com/hrbrmstr/reapr/issues}

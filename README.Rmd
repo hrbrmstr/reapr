@@ -4,7 +4,7 @@ editor_options:
   chunk_output_type: inline
 ---
 ```{r pkg-knitr-opts, include=FALSE}
-knitr$opts_chunk$set(collapse=TRUE, fig.retina=2, message=FALSE, warning=FALSE)
+knitr::opts_chunk$set(collapse=TRUE, fig.retina=2, message=FALSE, warning=FALSE)
 options(width=120)
 ```
 
@@ -14,11 +14,17 @@ options(width=120)
 
 # reapr
 
+Reap Information from Websites
+
 ## Description
+
+This will eventually be a clever description about web scraping with reapr.
 
 ## What's Inside The Tin
 
 The following functions are implemented:
+
+- `reap_url`:	Read HTML content from a URL
 
 ## Installation
 
@@ -36,6 +42,14 @@ library(reapr)
 # current version
 packageVersion("reapr")
 
+```
+
+## Basic Reaping
+
+```{r basic-reap}
+x <- reap_url("http://rud.is/b")
+
+x
 ```
 
 ## reapr Metrics
