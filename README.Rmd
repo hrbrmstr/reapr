@@ -1,7 +1,7 @@
 ---
 output: rmarkdown::github_document
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 ```{r pkg-knitr-opts, include=FALSE}
 knitr::opts_chunk$set(collapse=TRUE, fig.retina=2, message=FALSE, warning=FALSE)
@@ -18,17 +18,43 @@ Reap Information from Websites
 
 ## Description
 
-This will eventually be a clever description about web scraping with reapr.
+There's no longer need to fear getting at the gnarly bits of web pages.
+For the vast majority of web scraping tasks, the 'rvest' package does a
+phenomenal job providing just enough of what you need to get by. But, if you
+want more of the details of the site you're scraping, some handy shortcuts to
+page elements in use and the ability to not have to think too hard about
+serialization during scraping tasks, then you may be interested in reaping
+more than harvesting. Tools are provided to interact with web sites content
+and metadata more granular level than 'rvest' but at a higher level than
+'httr'/'curl'.
+
+## NOTE
+
+This is very much a WIP but there are enough basic features to let others kick the tyres
+and see what's woefully busted or in need of attention.
 
 ## What's Inside The Tin
 
 The following functions are implemented:
 
 - `reap_url`:	Read HTML content from a URL
+- `mill`:	Turn a 'reapr_doc' into plain text without cruft
+- `reapr`:	Reap Information from Websites
+- `reap_attr`:	Reap text, names and attributes from HTML
+- `reap_attrs`:	Reap text, names and attributes from HTML
+- `reap_children`:	Reap text, names and attributes from HTML
+- `reap_name`:	Reap text, names and attributes from HTML
+- `reap_node`:	Reap nodes from an reaped HTML document
+- `reap_nodes`:	Reap nodes from an reaped HTML document
+- `reap_table`:	Extract data from HTML tables
+- `reap_text`:	Reap text, names and attributes from HTML
+- `add_response_url_from`:	Add a 'reapr_doc' response prefix URL to a data frame
 
 ## Installation
 
 ```{r install-ex, eval=FALSE}
+devtools::install_git("https://git.sr.ht/~hrbrmstr/reapr")
+# or 
 devtools::install_git("https://gitlab.com/hrbrmstr/reapr.git")
 # or
 devtools::install_github("hrbrmstr/reapr")
@@ -38,6 +64,8 @@ devtools::install_github("hrbrmstr/reapr")
 
 ```{r lib-ex}
 library(reapr)
+library(hrbrthemes) # sr.hr/~hrbrmstr/hrbrthemes | git[la|hu]b.com/hrbrmstr/hrbrthemes
+library(tidyverse) # for some examples only
 
 # current version
 packageVersion("reapr")
@@ -51,6 +79,121 @@ x <- reap_url("http://rud.is/b")
 
 x
 ```
+
+The formatted object print-output shows much of what you get with a reaped URL.
+
+`reapr::real_url()`:
+
+- Uses `httr::GET()` to make web connections and retrieve content. This enables
+  it to behave more like an actual (non-javascript-enabled) browser. You can
+  pass anything `httr::GET()` can handle to `...` (e.g. `httr::user_agent()`)
+  to have as much granular control over the interaction as possible.
+- Returns a richer set of data. After the `httr::response` object is obtained
+  many tasks are performed including:
+    - timestamping the URL crawl
+    - extraction of the asked-for URL and the final URL (in the case of redirects)
+    - extraction of the IP address of the target server
+    - extraction of both plaintext and parsed (`xml_document`) HTML
+    - extraction of the plaintext webpage `<title>` (if any)
+    - generation of a dynamic list tags in the document which can be
+      fed directly to HTML/XML search/retrieval function (which may speed
+      up node discovery)
+    - extraction of the text of all comments in the HTML document
+    - inclusion of the full `httr::response` object with the returned object
+    - extraction of the time it took to make the complete request
+
+Finally, it works with other package member functions to check the validity
+of the parsed `xml_document` and auto-regen the parse (since it has the full
+content available to it) prior to any other operations. This also makes `reapr_doc`
+object _serializable_ without having to spend your own cycles on that.
+
+If you need more or need the above in different ways please file issues.
+
+## Pre-computed Tags
+
+On document retrieval, `reapr` automagically builds convenient R-accessible lists of
+all the tags in the retrieved document. They aren't recursive, but they are a convenient
+"bags" of tags to use when you don't feel like crafting that perfect XPath.
+
+Let's see what tags RStudio favors most on their Shiny home page:
+
+```{r}
+x <- reap_url("https://shiny.rstudio.com/articles/")
+
+x
+
+enframe(sort(lengths(x$tag))) %>%
+  mutate(name = factor(name, levels = name)) %>%
+  ggplot(aes(value, name)) +
+  geom_segment(aes(xend = 0, yend = name), , size = 3, color = "goldenrod") +
+  labs(
+    x = "Tag frequency", y = NULL,
+    title = "HTML Tag Distribution on RStudio's Shiny Homepage"
+  ) +
+  scale_x_comma(position = "top") +
+  theme_ft_rc(grid = "X") +
+  theme(axis.text.y = element_text(family = "mono"))
+```
+
+Lots and lots of `<div>`s!
+
+```{r}
+x$tag$div
+```
+
+Let's take a look at the article titles:
+
+```{r results = 'asis'}
+as.data.frame(x$tag$div) %>% 
+  filter(class == "article-title") %>% 
+  select(`Shiny Articles`=elem_content) %>% 
+  knitr::kable()
+```
+
+No XPath or CSS selectors!
+
+Let's abandon the `tidyverse` for base R piping for a minute and do something similar to extract and convert the index of [CRAN Task Views](https://cloud.r-project.org/web/views/) to a markdown list (which will conveniently render here). Again, no XPath or CSS selectors required once we read in the URL:
+
+```{r results='asis'}
+x <- reap_url("https://cloud.r-project.org/web/views/")
+
+as.data.frame(x$tag$a) %>% 
+  add_response_url_from(x) %>% 
+  subset(!grepl("^http[s]://", href)) %>% 
+  transform(href = sprintf("- [%s](%s%s)", elem_content, prefix_url, href)) %>% 
+  .[, "href", drop=TRUE] %>% 
+  paste0(collapse = "\n") %>% 
+  cat()
+```
+
+This functionality is not a panacea since they are just bags of tags, but it may save you some time and frustration.
+
+## Tables
+
+Unlike `rvest` with it's magical and wonderful `html_table()` `reapr` provides more raw control
+over the content of `<table>` elements. Let's look at the "population change over time" table from the Wikipedia page on the demography of the UK (<https://en.wikipedia.org/wiki/Demography_of_the_United_Kingdom>):
+
+```{r}
+x <- reap_url("https://en.wikipedia.org/wiki/Demography_of_the_United_Kingdom")
+
+reap_node(x, ".//table[contains(., 'Intercensal')]") %>% 
+  reap_table()
+```
+
+As you can see, it doesn't do the cleanup work for you and has no way to even say there's a header. That's because you can do that with `rvest::html_table()`. The equivalent `reapr` function gives you the raw table and handles `colspan` and `rowspan` insanity by adding the missing cells and filling in the gaps. You can use `docxtractr::assign_colnames()` to make a given row the column titles and `docxtractr::mcga()` or `janitor::clean_names()` to name them proper R names then `readr::type_convert()` to finish the task.
+
+While that may seem overkill for this example (it is), it wouldn't be if the table were more gnarly (I'm working on an example for that which will replace this one when it's done).
+
+For truly gnarly tables you can get an overview of the structure (without the data frame conversion):
+
+```{r}
+reap_node(x, ".//table[contains(., 'Intercensal')]") %>% 
+  reap_table(raw = TRUE) -> raw_tbl
+
+raw_tbl
+```
+
+And work with the `list` it gives back (which contains all the HTML element attributes as R attributes so you can pull data stored in them if need be).
 
 ## reapr Metrics
 

@@ -21,7 +21,7 @@
 #'     - extraction of the plaintext webpage `<title>` (if any)
 #'     - generation of a dynamic list tags in the document which can be
 #'       fed directly to HTML/XML search/retrieval function (which may speed
-#'       up node discover)
+#'       up node discovery)
 #'     - extraction of the text of all comments in the HTML document
 #'     - inclusion of the full `httr::response` object with the returned object
 #'     - extraction of the time it took to make the complete request
@@ -37,6 +37,8 @@
 #' @param ... other parameters passed on to [httr::GET()]
 #' @return a `reapr_doc` object
 #' @export
+#' @examples
+#' x <- reap_url("http://books.toscrape.com/")
 reap_url <- function(url, encoding = "", ...) {
 
   encoding <- trimws(encoding)
@@ -70,7 +72,12 @@ reap_url <- function(url, encoding = "", ...) {
       xml2::xml_find_all(parsed_html, tag)
     }),
     tags_in_doc
-  ) -> env$tag
+  ) -> env[["tag"]]
+
+  lapply(env[["tag"]], function(.x) {
+    class(.x) <- c("reapr_taglist", class(.x))
+    .x
+  }) -> env[["tag"]]
 
   env$doc_comments <- xml2::xml_text(xml2::xml_find_all(parsed_html, "//*/comment()"))
 

@@ -18,28 +18,16 @@ validate_parsed_content <- function(env) {
       xml2::xml_find_all(parsed_html, tag)
     }),
     tags_in_doc
-  ) -> env$tag
+  ) -> env[["tag"]]
+
+  lapply(env[["tag"]], function(.x) {
+    class(.x) <- c("reapr_taglist", class(.x))
+    .x
+  }) -> env[["tag"]]
 
   env
 
 }
-
-# make_selector <- function (css, xpath) {
-#   if (missing(css) && missing(xpath))
-#     stop("Please supply one of css or xpath", call. = FALSE)
-#   if (!missing(css) && !missing(xpath))
-#     stop("Please supply css or xpath, not both", call. = FALSE)
-#   if (!missing(css)) {
-#     if (!is.character(css) && length(css) == 1)
-#       stop("`css` must be a string")
-#     selectr::css_to_xpath(css, prefix = ".//")
-#   }
-#   else {
-#     if (!is.character(xpath) && length(xpath) == 1)
-#       stop("`xpath` must be a string")
-#     xpath
-#   }
-# }
 
 lock_environment <- function(env, exclude="") {
   for (nm in ls(env)) {
@@ -52,6 +40,10 @@ lock_environment <- function(env, exclude="") {
 set_names <- function(x, nms) {
   names(x) <- nms
   x
+}
+
+`%na%` <- function(a, b) {
+  if (is.na(a)) b else a
 }
 
 `%||%` <- function(a, b) {

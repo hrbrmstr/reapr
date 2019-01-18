@@ -41,7 +41,7 @@ many tasks are performed including:
 \item extraction of the plaintext webpage \code{<title>} (if any)
 \item generation of a dynamic list tags in the document which can be
 fed directly to HTML/XML search/retrieval function (which may speed
-up node discover)
+up node discovery)
 \item extraction of the text of all comments in the HTML document
 \item inclusion of the full \code{httr::response} object with the returned object
 \item extraction of the time it took to make the complete request
@@ -52,4 +52,7 @@ Finally, it works with other package member functions to check the validity
 of the parsed \code{xml_document} and auto-regen the parse (since it has the full
 content available to it) prior to any other operations. This also makes \code{reapr_doc}
 object \emph{serializable} without having to spend your own cycles on that.
+}
+\examples{
+x <- reap_url("http://books.toscrape.com/")
 }

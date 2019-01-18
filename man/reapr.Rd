@@ -6,7 +6,15 @@
 \alias{reapr-package}
 \title{Reap Information from Websites}
 \description{
-This will eventually be a clever description about web scraping with reapr.
+There's no longer need to fear getting at the gnarly bits of web pages.
+For the vast majority of web scraping tasks, the 'rvest' package does a
+phenomenal job providing just enough of what you need to get by. But, if you
+want more of the details of the site you're scraping, some handy shortcuts to
+page elements in use and the ability to not have to think too hard about
+serialization during scraping tasks, then you may be interested in reaping
+more than harvesting. Tools are provided to interact with web sites content
+and metadata more granular level than 'rvest' but at a higher level than
+'httr'/'curl'.
 }
 \details{
 \itemize{
