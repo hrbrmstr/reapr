@@ -47,7 +47,7 @@ reap_url <- function(url, encoding = "", ...) {
 
   res <- httr::GET(url = url, ...)
 
-  httr::stop_for_status(res)
+  httr::warn_for_status(res)
 
   if (encoding == "") encoding <- NULL
 
